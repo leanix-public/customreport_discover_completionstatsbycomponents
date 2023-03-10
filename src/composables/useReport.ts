@@ -71,7 +71,6 @@ export const queryData = async (
       }
     ]
   }
-  console.log('QUERING', filter)
 
   try {
     lx.showSpinner()
