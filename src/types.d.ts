@@ -1,5 +1,6 @@
-export interface IArchitect {
-  architect: string
+export interface IArchitectSubscription {
+  id: string
+  name: string
   completionLevel: number
 }
 

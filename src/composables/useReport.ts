@@ -1,6 +1,6 @@
 import '@leanix/reporting'
 import { ref, computed, unref } from 'vue'
-import type { IArchitect, IArchitectCount } from '@/types'
+import type { IArchitectSubscription, IArchitectCount } from '@/types'
 import type { ChartData, ChartDataset } from 'chart.js'
 import debounce from 'lodash.debounce'
 
@@ -33,7 +33,7 @@ const architectCounts = ref<IArchitectCount[]>([])
 // query component and return all { owner, pipeline }
 export const queryData = async (
   filter?: lxr.ReportFacetsSelection
-): Promise<IArchitect[]> => {
+): Promise<IArchitectSubscription[]> => {
   // Destructing assignment of filter object with alias for facets and fullTextSearch attributes
   const facetFilters: lxr.FacetFilter[] = filter?.facets ?? [
     {
@@ -74,10 +74,10 @@ export const queryData = async (
 
   try {
     lx.showSpinner()
-    const result: IArchitect[] = await lx
+    const result: IArchitectSubscription[] = await lx
       .executeGraphQL(query, JSON.stringify(variables))
       .then(({ allFactSheets }) => {
-        const ret = []
+        const ret: IArchitectSubscription[] = []
         for (let i = 0; i < allFactSheets.edges.length; i++) {
           const node = allFactSheets.edges[i].node
           const completionPercent =
@@ -88,8 +88,6 @@ export const queryData = async (
             else if (completionPercent <= 75) completionLevel = 2
             else if (completionPercent < 100) completionLevel = 3
           }
-
-          let architect = ''
 
           for (let j = 0; j < node.subscriptions.edges.length; j++) {
             const subNode = node.subscriptions.edges[j].node
@@ -103,21 +101,18 @@ export const queryData = async (
                   subNode.roles[i].name == 'Product Area Architect' ||
                   subNode.roles[i].name == 'Product Family Architect'
                 ) {
-                  architect = subNode.user.id + '^'
-                  if (subNode.user.lastName != null)
-                    architect =
-                      architect +
-                      subNode.user.firstName +
-                      ' ' +
-                      subNode.user.lastName
-                  else architect = architect + subNode.user.email
-                  ret.push({ architect, completionLevel })
+                  const id = subNode.user.id as string
+                  const name =
+                    subNode.user.lastName != null
+                      ? `${subNode.user.firstName} ${subNode.user.lastName}`
+                      : subNode.user.email
+                  ret.push({ id, name, completionLevel })
                 }
               }
             }
           }
         }
-        return ret as IArchitect[]
+        return ret
       })
     return result
   } catch (error) {
@@ -129,7 +124,7 @@ export const queryData = async (
 }
 
 export const createChartData = (
-  input: IArchitect[]
+  input: IArchitectSubscription[]
 ): ChartData<'bar', number[]> => {
   // calculate completion buckets
   const completionLevels = [
@@ -138,7 +133,7 @@ export const createChartData = (
 
   architectCounts.value = Object.values(
     input.reduce((acc: Record<string, IArchitectCount>, rec) => {
-      const [id, name] = rec.architect.split('^')
+      const { id, name } = rec
 
       if (!acc[id]) acc[id] = { id, name, counts: new Map<number, number>() }
 
