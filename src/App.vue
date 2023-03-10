@@ -21,7 +21,7 @@
           missing Architect assignment
         </span>
       </div>
-      <div class="flex-1">
+      <div class="flex-1 mt-4 w-full mx-auto max-w-6xl">
         <bar-chart />
       </div>
     </div>

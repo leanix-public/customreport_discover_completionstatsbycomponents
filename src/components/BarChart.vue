@@ -3,7 +3,7 @@
     v-if="chartData !== null"
     :data="chartData"
     :options="options"
-    class="mt-4 mx-auto max-w-6xl w-full" />
+    class="relative" />
 </template>
 
 <script lang="ts" setup>
@@ -25,6 +25,7 @@ const { chartData, navigateToInventory } = useReport()
 
 const options: ChartOptions<'bar'> = {
   responsive: true,
+  maintainAspectRatio: true,
   interaction: { intersect: false, mode: 'x' },
   scales: { y: { beginAtZero: true, stacked: true } },
   aspectRatio: 3,
